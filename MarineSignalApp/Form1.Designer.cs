@@ -56,6 +56,7 @@
             this.textEdit1 = new DevExpress.XtraEditors.TextEdit();
             this.fileDlg = new System.Windows.Forms.OpenFileDialog();
             this.BgFetchDataWorker = new System.ComponentModel.BackgroundWorker();
+            this.bgSyncHFrameWorker = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl1)).BeginInit();
             this.groupControl1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.listBoxControl1)).BeginInit();
@@ -231,7 +232,7 @@
             // 
             // simpleButton3
             // 
-            this.simpleButton3.Location = new System.Drawing.Point(160, 151);
+            this.simpleButton3.Location = new System.Drawing.Point(185, 175);
             this.simpleButton3.Name = "simpleButton3";
             this.simpleButton3.Size = new System.Drawing.Size(75, 23);
             this.simpleButton3.TabIndex = 7;
@@ -240,7 +241,7 @@
             // 
             // simpleButton2
             // 
-            this.simpleButton2.Location = new System.Drawing.Point(31, 151);
+            this.simpleButton2.Location = new System.Drawing.Point(54, 175);
             this.simpleButton2.Name = "simpleButton2";
             this.simpleButton2.Size = new System.Drawing.Size(72, 23);
             this.simpleButton2.TabIndex = 6;
@@ -249,7 +250,7 @@
             // 
             // simpleButton1
             // 
-            this.simpleButton1.Location = new System.Drawing.Point(246, 106);
+            this.simpleButton1.Location = new System.Drawing.Point(236, 119);
             this.simpleButton1.Name = "simpleButton1";
             this.simpleButton1.Size = new System.Drawing.Size(48, 23);
             this.simpleButton1.TabIndex = 5;
@@ -258,23 +259,23 @@
             // 
             // textEdit3
             // 
-            this.textEdit3.Location = new System.Drawing.Point(31, 107);
+            this.textEdit3.Location = new System.Drawing.Point(39, 120);
             this.textEdit3.MenuManager = this.ribbonControl1;
             this.textEdit3.Name = "textEdit3";
-            this.textEdit3.Size = new System.Drawing.Size(204, 20);
+            this.textEdit3.Size = new System.Drawing.Size(158, 20);
             this.textEdit3.TabIndex = 4;
             // 
             // textEdit2
             // 
-            this.textEdit2.Location = new System.Drawing.Point(135, 64);
+            this.textEdit2.Location = new System.Drawing.Point(161, 76);
             this.textEdit2.MenuManager = this.ribbonControl1;
             this.textEdit2.Name = "textEdit2";
-            this.textEdit2.Size = new System.Drawing.Size(100, 20);
+            this.textEdit2.Size = new System.Drawing.Size(123, 20);
             this.textEdit2.TabIndex = 3;
             // 
             // labelControl2
             // 
-            this.labelControl2.Location = new System.Drawing.Point(31, 67);
+            this.labelControl2.Location = new System.Drawing.Point(39, 79);
             this.labelControl2.Name = "labelControl2";
             this.labelControl2.Size = new System.Drawing.Size(72, 14);
             this.labelControl2.TabIndex = 2;
@@ -282,7 +283,7 @@
             // 
             // labelControl1
             // 
-            this.labelControl1.Location = new System.Drawing.Point(31, 27);
+            this.labelControl1.Location = new System.Drawing.Point(39, 35);
             this.labelControl1.Name = "labelControl1";
             this.labelControl1.Size = new System.Drawing.Size(72, 14);
             this.labelControl1.TabIndex = 1;
@@ -290,10 +291,10 @@
             // 
             // textEdit1
             // 
-            this.textEdit1.Location = new System.Drawing.Point(135, 24);
+            this.textEdit1.Location = new System.Drawing.Point(161, 32);
             this.textEdit1.MenuManager = this.ribbonControl1;
             this.textEdit1.Name = "textEdit1";
-            this.textEdit1.Size = new System.Drawing.Size(100, 20);
+            this.textEdit1.Size = new System.Drawing.Size(123, 20);
             this.textEdit1.TabIndex = 0;
             // 
             // fileDlg
@@ -302,7 +303,19 @@
             // 
             // BgFetchDataWorker
             // 
+            this.BgFetchDataWorker.WorkerReportsProgress = true;
+            this.BgFetchDataWorker.WorkerSupportsCancellation = true;
             this.BgFetchDataWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.BgFetchDataWorker_DoWork);
+            this.BgFetchDataWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.BgFetchDataWorker_ProgressChanged);
+            this.BgFetchDataWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.BgFetchDataWorker_RunWorkerCompleted);
+            // 
+            // bgSyncHFrameWorker
+            // 
+            this.bgSyncHFrameWorker.WorkerReportsProgress = true;
+            this.bgSyncHFrameWorker.WorkerSupportsCancellation = true;
+            this.bgSyncHFrameWorker.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgSyncHFrameWorker_DoWork);
+            this.bgSyncHFrameWorker.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.bgSyncHFrameWorker_ProgressChanged);
+            this.bgSyncHFrameWorker.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgSyncHFrameWorker_RunWorkerCompleted);
             // 
             // Form1
             // 
@@ -371,6 +384,7 @@
         private DevExpress.XtraEditors.SimpleButton simpleButton3;
         private System.Windows.Forms.OpenFileDialog fileDlg;
         private System.ComponentModel.BackgroundWorker BgFetchDataWorker;
+        private System.ComponentModel.BackgroundWorker bgSyncHFrameWorker;
     }
 }
 

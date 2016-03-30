@@ -222,7 +222,7 @@ namespace ipp
     unsafe public class sp
     {
 
-        internal const string libname = "dll\\ippm-5.3.dll";
+        internal const string libname = "ipps-5.3.dll";
 
 
         [SuppressUnmanagedCodeSecurityAttribute()]

@@ -35,7 +35,7 @@ namespace ipp {
 
 unsafe public class vm {
 
-   internal const string libname = "dll\\ippvm-5.3.dll";
+   internal const string libname = "ippvm-5.3.dll";
 
 
 [SuppressUnmanagedCodeSecurityAttribute()]

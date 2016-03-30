@@ -231,7 +231,7 @@ namespace ipp {
 
 unsafe public class sc {
 
-   internal const string libname = "dll\\ippsc-5.3.dll";
+   internal const string libname = "ippsc-5.3.dll";
 
 
 [SuppressUnmanagedCodeSecurityAttribute()]

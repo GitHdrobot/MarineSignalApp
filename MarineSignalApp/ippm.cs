@@ -35,7 +35,7 @@ namespace ipp {
 
 unsafe public class mp {
 
-   internal const string libname = "dll\\ippm-5.3.dll";
+   internal const string libname = "ippm-5.3.dll";
 
 
 [SuppressUnmanagedCodeSecurityAttribute()]
