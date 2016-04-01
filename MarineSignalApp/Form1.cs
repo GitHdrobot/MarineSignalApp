@@ -18,6 +18,7 @@ using System.IO;
 
 using JerryMouse;
 using System.Collections.Concurrent;
+using System.Threading;
 
 namespace MarineSignalApp
 {
@@ -27,7 +28,7 @@ namespace MarineSignalApp
         public const int MAX_POOL_SIZE = 209715200;//200M
         public const int MAX_IND_SIZE = 2097152;//2M
         public const int MAX_NUM_BUFF = MAX_POOL_SIZE / MAX_IND_SIZE;
-        public const int NUM_OF_BUFF = 100;
+        public const int NUM_OF_BUFF = 300;
 
         public MarineHFrame hframe;
         protected FileStream sigDatafs;
@@ -36,9 +37,16 @@ namespace MarineSignalApp
         protected bool bReadDone, bRunning, bQuit;
 
         public ConcurrentQueue<byte[]> mdataqueue;
+        AutoResetEvent dataQueueevent;
         //相干码矩阵
         //Ipp32fc[] mArrayCorrCode;
         IntPtr hglobalCorre;
+
+        //测试运行时间
+        [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
+        static extern bool QueryPerformanceCounter(ref long count);
+        [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
+        static extern bool QueryPerformanceFrequency(ref long count);
 
         //Windows 组件 初始化
         public Form1()
@@ -57,7 +65,7 @@ namespace MarineSignalApp
             try
             {
                 fileDlg = new OpenFileDialog();
-                fileDlg.Filter = "data Documents(*.bin;*.dat)|(*.bin;*.dat)|All Files(*.*)|(*.*)";
+                fileDlg.Filter = "data Documents(*.bin;*.dat)|*.bin;*.dat|All Files(*.*)|*.*";
                 fileDlg.ShowReadOnly = true;
                 DialogResult r = fileDlg.ShowDialog();
                 if (r == DialogResult.OK)//打开成功
@@ -161,6 +169,14 @@ namespace MarineSignalApp
             this.textEdit1.Text = hframe.bytesNumOneCircle + "";
             this.textEdit2.Text = 0.ToString();
             this.textEdit3.Text = RtFilePath.signalFilePath;
+
+            BgFetchDataWorker.WorkerSupportsCancellation = true;
+            BgFetchDataWorker.DoWork += BgFetchDataWorker_DoWork;
+            bgSyncHFrameWorker.WorkerSupportsCancellation = true;
+            bgSyncHFrameWorker.DoWork += bgSyncHFrameWorker_DoWork;
+
+            dataQueueevent = new AutoResetEvent(false);
+
         }
         //读取相干码文件
         public void ReadCorreCode(ref byte[] buffer)
@@ -189,31 +205,49 @@ namespace MarineSignalApp
             {
                 return;
             }
+            //定义测试时间所需变量
+            long count = 0;
+            long count1 = 0;
+            long freq = 0;
+            double result = 0;
+
             try
             {
-                byte[] bfwbuff = new byte[hframe.bytesNumOneCircle];
+                byte[] bfwbuff ;
                 while (true)
                 {
 
-                    while (bRunning && !bReadDone)
+                    while (bRunning)
                     {
+                        //运行时间
+                        QueryPerformanceFrequency(ref freq);
+                        QueryPerformanceCounter(ref count);
 
                         if (bQuit)
                         {
                             return;
                         }
+                        if (bReadDone)
+                        {
+                            Console.WriteLine("数据读取完成");
+                            System.Threading.Thread.Sleep(1500);
+                            continue;
+                        }
                         if (mdataqueue.Count > NUM_OF_BUFF)
                         {
-                            System.Threading.Thread.Sleep(400);
+                            Console.WriteLine("数据缓冲区已满 等待处理");
+                            System.Threading.Thread.Sleep(1500);
                             continue;
                         }
                         if (sigDatabr.BaseStream.Position < sigDatabr.BaseStream.Length)
                         {
 
-                            readLen = sigDatabr.Read(bfwbuff, 0, hframe.bytesNumOneCircle);
-                            if (readLen == hframe.bytesNumOneCircle)
+                            //readLen = sigDatabr.Read(bfwbuff, 0, hframe.bytesNumOneCircle);
+                            bfwbuff = sigDatabr.ReadBytes(hframe.bytesNumOneCircle);
+                            if (bfwbuff.Length == hframe.bytesNumOneCircle)
                             {
                                 form.mdataqueue.Enqueue(bfwbuff);
+                                //System.Threading.Thread.Sleep(600);
                             }
                             else {
                                 continue;
@@ -225,8 +259,12 @@ namespace MarineSignalApp
                             break;
                         }
 
+                        QueryPerformanceCounter(ref count1);
+                        count = count1 - count;
+                        result = (double)(count) / (double)freq;
+                        Console.WriteLine("读取102帧时间: {0} 秒", result);
                     }
-                    if (bQuit || bReadDone)
+                    if (bQuit)
                     {
                         break;
                     }
@@ -238,9 +276,11 @@ namespace MarineSignalApp
             catch (Exception ex)
             {
                 Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("处理数据线程异常" + Thread.CurrentThread.Name);
             }
-            finally {
-                
+            finally
+            {
+
             }
 
         }
@@ -281,6 +321,14 @@ namespace MarineSignalApp
 
             IntPtr hglobalDataSt = (IntPtr)null;
             IntPtr hglobalDataSnd = (IntPtr)null;
+
+
+            //定义测试时间所需变量
+            long count = 0;
+            long count1 = 0;
+            long freq = 0;
+            double result = 0;
+
             try
             {
 
@@ -298,6 +346,9 @@ namespace MarineSignalApp
                 hglobalDataSt = Marshal.AllocHGlobal(datasz);
                 hglobalDataSnd = Marshal.AllocHGlobal(datasz);
 
+                byte[] st = new byte[hframe.bytesNumOneCircle];
+                byte[] snd = new byte[hframe.bytesNumOneCircle];
+
                 float fmaxst = 0.0f, fmaxsnd = 0.0f;
                 int iIndxst = -1, iIndxsnd = -1, iCorrectIdx = -1;
 
@@ -306,34 +357,54 @@ namespace MarineSignalApp
                 IntPtr hAbsCorSumTrace = Marshal.AllocHGlobal(htraceSumLen);
                 int indxTrace = -1;
                 float maxTrace = -1.0f;
+
                 while (true)
                 {
-                    while (mdataqueue.Count > 0)
+                    while (form.mdataqueue.Count > 0)
                     {
+                        QueryPerformanceFrequency(ref freq);
+                        QueryPerformanceCounter(ref count);
+
                         if (bQuit)
                         {
                             break;
                         }
-                        if (mdataqueue.Count < rtdef.TWO)
+                        lock (this)
                         {
-                            Console.WriteLine("已处理完数据,等待下一批数据");
-                            System.Threading.Thread.Sleep(1000);
-                            continue;
+                            if (form.mdataqueue.Count < rtdef.TWO)
+                            {
+                                Console.WriteLine("数据已处理完成 等待中");
+                                System.Threading.Thread.Sleep(10);
+                                continue;
+                            }
                         }
-                        byte[] st;
-                        mdataqueue.TryDequeue(out st);
+
                         //GCHandle pinnedObj = GCHandle.Alloc(anObj, GCHandleType.Pinned);
+                        lock (this)
+                        {
+                            if (!form.mdataqueue.TryDequeue(out st))
+                            {
+                                Console.WriteLine("取第一个数据失败");
+                            }
+                        }
+
                         Marshal.Copy(st, 0, hglobalDataSt, hframe.bytesNumOneCircle);
 
                         //同步操作 寻找H帧的位置
                         #region 
-                        if (hframe.HFrameSyncState == false)
+                        if (hframe.HFrameSyncState == false || true)
                         {
-                            byte[] snd;
-                            mdataqueue.TryDequeue(out snd);
+                            lock (this)
+                            {
+                                if (!mdataqueue.TryDequeue(out snd))
+                                {
+                                    Console.WriteLine("取第二个数据失败");
+                                }
+                            }
+
                             Marshal.Copy(snd, 0, hglobalDataSnd, hframe.bytesNumOneCircle);
-                            GetHFrameLocation((Ipp32fc*)hglobalDataSt, hframe.sampleNumOneCircle, (float*)hAbsCorSumSt, hframe.slidelen, ref fmaxst, ref iIndxst);
-                            GetHFrameLocation((Ipp32fc*)hglobalDataSnd, hframe.sampleNumOneCircle, (float*)hAbsCorSumSnd, hframe.slidelen, ref fmaxsnd, ref iIndxsnd);
+                            GetHFrameLocation((Ipp32fc*)hglobalDataSt, hframe.sampleNumOneCircle, (float*)hAbsCorSumSt.ToPointer(), hframe.slidelen, ref fmaxst, ref iIndxst);
+                            GetHFrameLocation((Ipp32fc*)hglobalDataSnd, hframe.sampleNumOneCircle, (float*)hAbsCorSumSnd.ToPointer(), hframe.slidelen, ref fmaxsnd, ref iIndxsnd);
                             if (iIndxsnd < 0 || iIndxst < 0)
                             {
                                 //未找到H帧
@@ -387,7 +458,7 @@ namespace MarineSignalApp
                             }
                         }
                         #endregion
-                        Console.WriteLine(hframe.HFrameLocation);
+                        Console.WriteLine("iCorrectIdx:" + iCorrectIdx);
                     }
                     if (bQuit)
                     {
@@ -395,14 +466,21 @@ namespace MarineSignalApp
                     }
                     if (mdataqueue.Count == 0)
                     {
-                        System.Threading.Thread.Sleep(100);
+                        Thread.Sleep(100);
                     }
+
+                    QueryPerformanceCounter(ref count1);
+                    count = count1 - count;
+                    result = (double)(count) / (double)freq;
+                    Console.WriteLine("H帧寻找时间: {0} 秒", result);
+
                 }
 
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.StackTrace);
+                Console.WriteLine("读取数据线程" + Thread.CurrentThread.Name);
             }
 
             finally
@@ -424,6 +502,8 @@ namespace MarineSignalApp
                 {
                     Marshal.FreeHGlobal(hglobalDataSnd);
                 }
+
+
 
             }
 

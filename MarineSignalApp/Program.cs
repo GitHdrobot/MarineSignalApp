@@ -13,19 +13,26 @@ namespace MarineSignalApp
 {
     static class Program
     {
-       
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main()
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
+            try
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
 
-            BonusSkins.Register();
-            SkinManager.EnableFormSkins();
-            Application.Run(new Form1());
+                BonusSkins.Register();
+                SkinManager.EnableFormSkins();
+                Application.Run(new Form1());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.StackTrace);
+            }
         }
 
 
