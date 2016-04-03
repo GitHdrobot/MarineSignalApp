@@ -200,7 +200,6 @@ namespace MarineSignalApp
         {
             BackgroundWorker worker = sender as BackgroundWorker;
             Form1 form = e.Argument as Form1;
-            int readLen = 0;
             if (sigDatabr == null)
             {
                 return;
@@ -230,7 +229,7 @@ namespace MarineSignalApp
                         if (bReadDone)
                         {
                             Console.WriteLine("数据读取完成");
-                            System.Threading.Thread.Sleep(1500);
+                            System.Threading.Thread.Sleep(3000);
                             continue;
                         }
                         if (mdataqueue.Count > NUM_OF_BUFF)
@@ -344,10 +343,7 @@ namespace MarineSignalApp
                 hAbsCorSumSnd = Marshal.AllocHGlobal(sumsz);
 
                 hglobalDataSt = Marshal.AllocHGlobal(datasz);
-                hglobalDataSnd = Marshal.AllocHGlobal(datasz);
-
-                byte[] st = new byte[hframe.bytesNumOneCircle];
-                byte[] snd = new byte[hframe.bytesNumOneCircle];
+                hglobalDataSnd = Marshal.AllocHGlobal(datasz);         
 
                 float fmaxst = 0.0f, fmaxsnd = 0.0f;
                 int iIndxst = -1, iIndxsnd = -1, iCorrectIdx = -1;
@@ -360,10 +356,17 @@ namespace MarineSignalApp
 
                 while (true)
                 {
-                    while (form.mdataqueue.Count > 0)
+                    if (mdataqueue.IsEmpty)
+                    {
+                        Console.WriteLine("数据为空 等待中");
+                        Thread.Sleep(1000);
+                    } 
+                    while (!form.mdataqueue.IsEmpty)
                     {
                         QueryPerformanceFrequency(ref freq);
                         QueryPerformanceCounter(ref count);
+
+                        byte[] st = null, snd = null;
 
                         if (bQuit)
                         {
@@ -371,7 +374,7 @@ namespace MarineSignalApp
                         }
                         lock (this)
                         {
-                            if (form.mdataqueue.Count < rtdef.TWO)
+                            if (!hframe.HFrameSyncState && form.mdataqueue.Count < rtdef.TWO)
                             {
                                 Console.WriteLine("数据已处理完成 等待中");
                                 System.Threading.Thread.Sleep(10);
@@ -382,9 +385,10 @@ namespace MarineSignalApp
                         //GCHandle pinnedObj = GCHandle.Alloc(anObj, GCHandleType.Pinned);
                         lock (this)
                         {
-                            if (!form.mdataqueue.TryDequeue(out st))
+                            if (!form.mdataqueue.TryDequeue(out st) || st == null)
                             {
                                 Console.WriteLine("取第一个数据失败");
+                                continue;
                             }
                         }
 
@@ -392,13 +396,14 @@ namespace MarineSignalApp
 
                         //同步操作 寻找H帧的位置
                         #region 
-                        if (hframe.HFrameSyncState == false || true)
+                        if (hframe.HFrameSyncState == false)
                         {
                             lock (this)
                             {
-                                if (!mdataqueue.TryDequeue(out snd))
+                                if (!mdataqueue.TryDequeue(out snd) || snd == null)
                                 {
                                     Console.WriteLine("取第二个数据失败");
+                                    continue;
                                 }
                             }
 
@@ -408,35 +413,21 @@ namespace MarineSignalApp
                             if (iIndxsnd < 0 || iIndxst < 0)
                             {
                                 //未找到H帧
+                                Console.WriteLine("同步中，两个循环中都未寻找到");
                                 continue;
                             }
                             if (Math.Abs(iIndxsnd - iIndxst) < MarineHFrame.crange)
                             {
+                                Console.WriteLine("同步中，有两个循环中寻找到");
                                 iCorrectIdx = iIndxsnd;
-                                //正确
+                                //即两个都正确
                             }
                             else {
                                 GetCorrectHIndx((float*)hAbsCorSumSt, sumlen, iIndxst, (float*)hAbsCorSumSnd, sumlen, iIndxsnd, &iCorrectIdx);
+                                Console.WriteLine("同步中，有一个循环中寻找到");
                             }
 
-                            if (hframe.HFrameLocation < 0)//第一次寻找
-                            {
-                            }
-                            else {
-                                if (Math.Abs(hframe.HFrameLocation - iCorrectIdx) > MarineHFrame.crange)//H帧寻找不正确
-                                {
-                                    hframe.HFrameSyncState = false;
-                                    hframe.HSyncTimes = MarineHFrame.cHSyncTimes;
-                                }
-                                else {
-                                    hframe.HSyncTimes--;
-                                    if (hframe.HSyncTimes <= 0)
-                                    {
-                                        hframe.HFrameSyncState = true;
-                                    }
-                                }
-
-                            }
+                            hframe.HFrameSyncState = true;
                             hframe.HFrameLocation = iCorrectIdx;
                         }
                         #endregion
@@ -445,29 +436,31 @@ namespace MarineSignalApp
                         else {
                             //H帧 寻找的起始位置
                             int hstartIndx = hframe.HFrameLocation - hframe.HFrameTraceLftOffset <= 0 ? 0 : hframe.HFrameLocation - hframe.HFrameTraceLftOffset;
+                            if (hstartIndx + hlen >= hframe.sampleNumOneCircle) {
+                                Console.WriteLine("跟踪时，已越界");
+                                continue;//越界
+                            }
                             GetHFrameLocation((Ipp32fc*)hglobalDataSt + hstartIndx, hlen, (float*)hAbsCorSumTrace, htraceSumLen, ref maxTrace, ref indxTrace);
                             //跟踪失败 已失步
                             if (maxTrace < 0 || indxTrace < 0)
                             {
+                                Console.WriteLine("跟踪时，未寻找到");
                                 hframe.HFrameSyncState = false;
-                                hframe.HSyncTimes = MarineHFrame.cHSyncTimes;
                             }
                             else {
                                 hframe.HFrameSyncState = true;
                                 hframe.HFrameLocation = hstartIndx + indxTrace;
+                                Console.WriteLine("跟踪时，成功");
                             }
                         }
                         #endregion
-                        Console.WriteLine("iCorrectIdx:" + iCorrectIdx);
+                        Console.WriteLine("iCorrectIdx:" + hframe.HFrameLocation);
                     }
                     if (bQuit)
                     {
                         break;
                     }
-                    if (mdataqueue.Count == 0)
-                    {
-                        Thread.Sleep(100);
-                    }
+
 
                     QueryPerformanceCounter(ref count1);
                     count = count1 - count;
@@ -480,7 +473,7 @@ namespace MarineSignalApp
             catch (Exception ex)
             {
                 Console.WriteLine(ex.StackTrace);
-                Console.WriteLine("读取数据线程" + Thread.CurrentThread.Name);
+                Console.WriteLine("读取数据线程异常" + Thread.CurrentThread.Name);
             }
 
             finally
