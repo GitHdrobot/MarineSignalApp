@@ -19,6 +19,11 @@ using System.IO;
 using JerryMouse;
 using System.Collections.Concurrent;
 using System.Threading;
+using DevExpress.Xpo.Logger;
+// Import log4net classes.
+using log4net;
+using log4net.Config;
+using log4net.Core;
 
 namespace MarineSignalApp
 {
@@ -41,6 +46,9 @@ namespace MarineSignalApp
         //相干码矩阵
         //Ipp32fc[] mArrayCorrCode;
         IntPtr hglobalCorre;
+        // Define a static logger variable so that it references the
+        // Logger instance named "Form1".
+        private static readonly ILog log = log4net.LogManager.GetLogger(typeof(Form1));
 
         //测试运行时间
         [System.Runtime.InteropServices.DllImport("Kernel32.dll")]
@@ -151,6 +159,11 @@ namespace MarineSignalApp
         //进行必要的初始化工作
         public void InitialConfig()
         {
+            //加载log配置文件
+            log4net.Config.XmlConfigurator.Configure(new FileInfo("log4net.config"));
+         
+
+
             RtMemInitial();
             //创建一个HFrame实例
             hframe = new MarineHFrame();
@@ -176,8 +189,8 @@ namespace MarineSignalApp
             bgSyncHFrameWorker.DoWork += bgSyncHFrameWorker_DoWork;
 
             dataQueueevent = new AutoResetEvent(false);
-
         }
+
         //读取相干码文件
         public void ReadCorreCode(ref byte[] buffer)
         {
@@ -466,7 +479,6 @@ namespace MarineSignalApp
                     count = count1 - count;
                     result = (double)(count) / (double)freq;
                     Console.WriteLine("H帧寻找时间: {0} 秒", result);
-
                 }
 
             }
