@@ -122,15 +122,15 @@
             // 
             // checkEdit2
             // 
-            this.checkEdit2.Location = new System.Drawing.Point(25, 59);
+            this.checkEdit2.Location = new System.Drawing.Point(25, 34);
             this.checkEdit2.Name = "checkEdit2";
-            this.checkEdit2.Properties.Caption = "一般信息";
+            this.checkEdit2.Properties.Caption = "解调信息";
             this.checkEdit2.Size = new System.Drawing.Size(75, 19);
             this.checkEdit2.TabIndex = 1;
             // 
             // checkEdit1
             // 
-            this.checkEdit1.Location = new System.Drawing.Point(25, 34);
+            this.checkEdit1.Location = new System.Drawing.Point(25, 59);
             this.checkEdit1.Name = "checkEdit1";
             this.checkEdit1.Properties.Caption = "调试信息";
             this.checkEdit1.Size = new System.Drawing.Size(75, 19);
@@ -332,6 +332,7 @@
             this.Ribbon = this.ribbonControl1;
             this.Text = "海事卫星信号分析";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             ((System.ComponentModel.ISupportInitialize)(this.groupControl1)).EndInit();
             this.groupControl1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.listBoxControl1)).EndInit();
