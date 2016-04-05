@@ -160,10 +160,10 @@ namespace MarineSignalApp
         public void InitialConfig()
         {
             //加载log配置文件
-            log4net.Config.XmlConfigurator.Configure(new FileInfo("log4net.config"));
-            var logger = new log4net.Appender.MemoryAppender();
+            //log4net.Config.XmlConfigurator.Configure(new FileInfo("log4net.config"));
+            //var logger = new log4net.Appender.MemoryAppender();
 
-            log4net.Config.BasicConfigurator.Configure(logger);
+            //log4net.Config.BasicConfigurator.Configure(logger);
 
 
             RtMemInitial();
@@ -334,6 +334,9 @@ namespace MarineSignalApp
             IntPtr hglobalDataSnd = (IntPtr)null;
 
             IntPtr hAbsCorSumTrace = (IntPtr)null;
+
+            //GCHandle gchandlest, gchandlesnd;
+
             //定义测试时间所需变量
             long count = 0;
             long count1 = 0;
@@ -364,7 +367,7 @@ namespace MarineSignalApp
                 //跟踪时 相关求和的长度
                 int htraceSumLen = hlen - MarineHFrame.ccorreCodeNum;
                 hAbsCorSumTrace = Marshal.AllocHGlobal(htraceSumLen);
-    
+
 
                 int indxTrace = -1;
                 float maxTrace = -1.0f;
@@ -382,8 +385,6 @@ namespace MarineSignalApp
                         QueryPerformanceFrequency(ref freq);
                         QueryPerformanceCounter(ref count);
 
-                        byte[] st = null, snd = null;
-
                         if (bQuit)
                         {
                             break;
@@ -395,17 +396,23 @@ namespace MarineSignalApp
                             System.Threading.Thread.Sleep(10);
                             continue;
                         }
+                        byte[] st = null, snd = null;
+
                         //GCHandle pinnedObj = GCHandle.Alloc(anObj, GCHandleType.Pinned);
                         if (!mdataqueue.TryDequeue(out st) || st == null)
                         {
                             Console.WriteLine("取第一个数据失败");
                             continue;
                         }
+                        //gchandlest = GCHandle.Alloc(st, GCHandleType.Pinned);
+                     
+
                         if (st.Length != hframe.bytesNumOneCircle)
                         {
                             Console.WriteLine("Impossible!!!");
                             continue;
                         }
+                        //GCHandle.ToIntPtr(gchandlest);
                         Marshal.Copy(st, 0, hglobalDataSt, hframe.bytesNumOneCircle);
 
                         //同步操作 寻找H帧的位置
@@ -417,6 +424,7 @@ namespace MarineSignalApp
                                 Console.WriteLine("取第二个数据失败");
                                 continue;
                             }
+                            //gchandlesnd = GCHandle.Alloc(snd, GCHandleType.Pinned);
                             if (snd.Length != hframe.bytesNumOneCircle)
                             {
                                 Console.WriteLine("Impossible!!!");
@@ -459,7 +467,7 @@ namespace MarineSignalApp
                                 continue;//越界
                             }
                             Ipp32fc* hgstart = (Ipp32fc*)hglobalDataSt + hstartIndx;
-                            GetHFrameLocation(hgstart, hlen, (float*)hAbsCorSumTrace, htraceSumLen, ref maxTrace, ref indxTrace);
+                            //GetHFrameLocation(hgstart, hlen, (float*)hAbsCorSumTrace, htraceSumLen, ref maxTrace, ref indxTrace);
                             //跟踪失败 已失步
                             if (maxTrace < 0 || indxTrace < 0)
                             {
@@ -488,7 +496,11 @@ namespace MarineSignalApp
                 }
 
             }
-            catch (Exception ex)
+            catch (AccessViolationException ae)
+            {
+                Console.WriteLine(ae.StackTrace);
+                Console.WriteLine("读取数据线程异常" + Thread.CurrentThread.Name);
+            }catch(Exception ex)
             {
                 Console.WriteLine(ex.StackTrace);
                 Console.WriteLine("读取数据线程异常" + Thread.CurrentThread.Name);
@@ -517,7 +529,6 @@ namespace MarineSignalApp
                 {
                     Marshal.FreeHGlobal(hAbsCorSumTrace);
                 }
-
 
             }
 
