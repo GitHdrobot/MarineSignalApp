@@ -13,23 +13,12 @@
         /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            try
+
+            if (disposing && (components != null))
             {
-
-                dataQueueevent.Dispose();
-                sigDatabr.Dispose();
-                sigDatafs.Dispose();
-                if (disposing && (components != null))
-                {
-                    components.Dispose();
-                }
-                base.Dispose(disposing);
+                components.Dispose();
             }
-            catch (System.Exception ep)
-            {
-
-
-            }
+            base.Dispose(disposing);
         }
 
         #region Windows Form Designer generated code
@@ -41,12 +30,12 @@
         private void InitializeComponent()
         {
             this.groupControl1 = new DevExpress.XtraEditors.GroupControl();
-            this.listBoxControl1 = new DevExpress.XtraEditors.ListBoxControl();
+            this.logContainer = new DevExpress.XtraEditors.ListBoxControl();
             this.groupControl2 = new DevExpress.XtraEditors.GroupControl();
-            this.checkEdit4 = new DevExpress.XtraEditors.CheckEdit();
-            this.checkEdit3 = new DevExpress.XtraEditors.CheckEdit();
-            this.checkEdit2 = new DevExpress.XtraEditors.CheckEdit();
-            this.checkEdit1 = new DevExpress.XtraEditors.CheckEdit();
+            this.checkEditError = new DevExpress.XtraEditors.CheckEdit();
+            this.checkEditWarn = new DevExpress.XtraEditors.CheckEdit();
+            this.checkEditDemod = new DevExpress.XtraEditors.CheckEdit();
+            this.checkEditDebug = new DevExpress.XtraEditors.CheckEdit();
             this.ribbonControl1 = new DevExpress.XtraBars.Ribbon.RibbonControl();
             this.skinRibbonGalleryBarItem1 = new DevExpress.XtraBars.SkinRibbonGalleryBarItem();
             this.skinRibbonGalleryBarItem2 = new DevExpress.XtraBars.SkinRibbonGalleryBarItem();
@@ -71,13 +60,13 @@
             this.bgSyncHFrameWorker = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl1)).BeginInit();
             this.groupControl1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.listBoxControl1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.logContainer)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl2)).BeginInit();
             this.groupControl2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.checkEdit4.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.checkEdit3.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.checkEdit2.Properties)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.checkEdit1.Properties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.checkEditError.Properties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.checkEditWarn.Properties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.checkEditDemod.Properties)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.checkEditDebug.Properties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ribbonControl1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl4)).BeginInit();
@@ -90,63 +79,68 @@
             // 
             // groupControl1
             // 
-            this.groupControl1.Controls.Add(this.listBoxControl1);
+            this.groupControl1.Controls.Add(this.logContainer);
             this.groupControl1.Location = new System.Drawing.Point(2, 346);
             this.groupControl1.Name = "groupControl1";
             this.groupControl1.Size = new System.Drawing.Size(980, 149);
             this.groupControl1.TabIndex = 0;
             this.groupControl1.Text = "控制台";
+            this.groupControl1.DoubleClick += new System.EventHandler(this.groupControl1_DoubleClick);
             // 
-            // listBoxControl1
+            // logContainer
             // 
-            this.listBoxControl1.Location = new System.Drawing.Point(5, 24);
-            this.listBoxControl1.Name = "listBoxControl1";
-            this.listBoxControl1.Size = new System.Drawing.Size(970, 120);
-            this.listBoxControl1.TabIndex = 0;
+            this.logContainer.Location = new System.Drawing.Point(5, 24);
+            this.logContainer.Name = "logContainer";
+            this.logContainer.Size = new System.Drawing.Size(970, 120);
+            this.logContainer.TabIndex = 0;
             // 
             // groupControl2
             // 
-            this.groupControl2.Controls.Add(this.checkEdit4);
-            this.groupControl2.Controls.Add(this.checkEdit3);
-            this.groupControl2.Controls.Add(this.checkEdit2);
-            this.groupControl2.Controls.Add(this.checkEdit1);
+            this.groupControl2.Controls.Add(this.checkEditError);
+            this.groupControl2.Controls.Add(this.checkEditWarn);
+            this.groupControl2.Controls.Add(this.checkEditDemod);
+            this.groupControl2.Controls.Add(this.checkEditDebug);
             this.groupControl2.Location = new System.Drawing.Point(988, 346);
             this.groupControl2.Name = "groupControl2";
             this.groupControl2.Size = new System.Drawing.Size(171, 149);
             this.groupControl2.TabIndex = 1;
             this.groupControl2.Text = "输出控制";
             // 
-            // checkEdit4
+            // checkEditError
             // 
-            this.checkEdit4.Location = new System.Drawing.Point(25, 110);
-            this.checkEdit4.Name = "checkEdit4";
-            this.checkEdit4.Properties.Caption = "错误信息";
-            this.checkEdit4.Size = new System.Drawing.Size(75, 19);
-            this.checkEdit4.TabIndex = 3;
+            this.checkEditError.EditValue = true;
+            this.checkEditError.Location = new System.Drawing.Point(25, 110);
+            this.checkEditError.Name = "checkEditError";
+            this.checkEditError.Properties.Caption = "错误信息";
+            this.checkEditError.Size = new System.Drawing.Size(75, 19);
+            this.checkEditError.TabIndex = 3;
             // 
-            // checkEdit3
+            // checkEditWarn
             // 
-            this.checkEdit3.Location = new System.Drawing.Point(25, 84);
-            this.checkEdit3.Name = "checkEdit3";
-            this.checkEdit3.Properties.Caption = "警告信息";
-            this.checkEdit3.Size = new System.Drawing.Size(75, 19);
-            this.checkEdit3.TabIndex = 2;
+            this.checkEditWarn.EditValue = true;
+            this.checkEditWarn.Location = new System.Drawing.Point(25, 84);
+            this.checkEditWarn.Name = "checkEditWarn";
+            this.checkEditWarn.Properties.Caption = "警告信息";
+            this.checkEditWarn.Size = new System.Drawing.Size(75, 19);
+            this.checkEditWarn.TabIndex = 2;
             // 
-            // checkEdit2
+            // checkEditDemod
             // 
-            this.checkEdit2.Location = new System.Drawing.Point(25, 34);
-            this.checkEdit2.Name = "checkEdit2";
-            this.checkEdit2.Properties.Caption = "解调信息";
-            this.checkEdit2.Size = new System.Drawing.Size(75, 19);
-            this.checkEdit2.TabIndex = 1;
+            this.checkEditDemod.EditValue = true;
+            this.checkEditDemod.Location = new System.Drawing.Point(25, 34);
+            this.checkEditDemod.Name = "checkEditDemod";
+            this.checkEditDemod.Properties.Caption = "解调信息";
+            this.checkEditDemod.Size = new System.Drawing.Size(75, 19);
+            this.checkEditDemod.TabIndex = 1;
             // 
-            // checkEdit1
+            // checkEditDebug
             // 
-            this.checkEdit1.Location = new System.Drawing.Point(25, 59);
-            this.checkEdit1.Name = "checkEdit1";
-            this.checkEdit1.Properties.Caption = "调试信息";
-            this.checkEdit1.Size = new System.Drawing.Size(75, 19);
-            this.checkEdit1.TabIndex = 0;
+            this.checkEditDebug.EditValue = true;
+            this.checkEditDebug.Location = new System.Drawing.Point(25, 59);
+            this.checkEditDebug.Name = "checkEditDebug";
+            this.checkEditDebug.Properties.Caption = "调试信息";
+            this.checkEditDebug.Size = new System.Drawing.Size(75, 19);
+            this.checkEditDebug.TabIndex = 0;
             // 
             // ribbonControl1
             // 
@@ -212,7 +206,7 @@
             // 
             // groupControl3
             // 
-            this.groupControl3.Location = new System.Drawing.Point(2, 56);
+            this.groupControl3.Location = new System.Drawing.Point(875, 56);
             this.groupControl3.Name = "groupControl3";
             this.groupControl3.Size = new System.Drawing.Size(284, 284);
             this.groupControl3.TabIndex = 3;
@@ -220,7 +214,7 @@
             // 
             // groupControl4
             // 
-            this.groupControl4.Location = new System.Drawing.Point(292, 56);
+            this.groupControl4.Location = new System.Drawing.Point(339, 56);
             this.groupControl4.Name = "groupControl4";
             this.groupControl4.Size = new System.Drawing.Size(530, 284);
             this.groupControl4.TabIndex = 4;
@@ -236,7 +230,7 @@
             this.groupControl5.Controls.Add(this.labelControl2);
             this.groupControl5.Controls.Add(this.labelControl1);
             this.groupControl5.Controls.Add(this.textEdit1);
-            this.groupControl5.Location = new System.Drawing.Point(828, 56);
+            this.groupControl5.Location = new System.Drawing.Point(2, 56);
             this.groupControl5.Name = "groupControl5";
             this.groupControl5.Size = new System.Drawing.Size(331, 284);
             this.groupControl5.TabIndex = 6;
@@ -334,26 +328,24 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 14F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1161, 499);
+            this.Controls.Add(this.groupControl3);
             this.Controls.Add(this.groupControl5);
             this.Controls.Add(this.groupControl4);
-            this.Controls.Add(this.groupControl3);
             this.Controls.Add(this.groupControl2);
             this.Controls.Add(this.groupControl1);
             this.Controls.Add(this.ribbonControl1);
             this.Name = "Form1";
             this.Ribbon = this.ribbonControl1;
             this.Text = "海事卫星信号分析";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             ((System.ComponentModel.ISupportInitialize)(this.groupControl1)).EndInit();
             this.groupControl1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.listBoxControl1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.logContainer)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl2)).EndInit();
             this.groupControl2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.checkEdit4.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.checkEdit3.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.checkEdit2.Properties)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.checkEdit1.Properties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.checkEditError.Properties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.checkEditWarn.Properties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.checkEditDemod.Properties)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.checkEditDebug.Properties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ribbonControl1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.groupControl4)).EndInit();
@@ -371,12 +363,12 @@
         #endregion
 
         private DevExpress.XtraEditors.GroupControl groupControl1;
-        private DevExpress.XtraEditors.ListBoxControl listBoxControl1;
+        private DevExpress.XtraEditors.ListBoxControl logContainer;
         private DevExpress.XtraEditors.GroupControl groupControl2;
-        private DevExpress.XtraEditors.CheckEdit checkEdit1;
-        private DevExpress.XtraEditors.CheckEdit checkEdit2;
-        private DevExpress.XtraEditors.CheckEdit checkEdit3;
-        private DevExpress.XtraEditors.CheckEdit checkEdit4;
+        private DevExpress.XtraEditors.CheckEdit checkEditDebug;
+        private DevExpress.XtraEditors.CheckEdit checkEditDemod;
+        private DevExpress.XtraEditors.CheckEdit checkEditWarn;
+        private DevExpress.XtraEditors.CheckEdit checkEditError;
         private DevExpress.XtraBars.Ribbon.RibbonControl ribbonControl1;
         private DevExpress.XtraBars.Ribbon.RibbonPage ribbonPage1;
         private DevExpress.XtraBars.Ribbon.RibbonPageGroup ribbonPageGroup1;

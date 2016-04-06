@@ -123,7 +123,8 @@
     <Compile Include="ipps.cs" />
     <Compile Include="ippsc.cs" />
     <Compile Include="ippvm.cs" />
-    <Compile Include="UIControlAppender.cs" />
+    <Compile Include="LogHelper.cs" />
+    <Compile Include="RichTextBoxAppender.cs" />
     <Compile Include="MemoryManageWrapper.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
