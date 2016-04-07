@@ -138,13 +138,7 @@ namespace MarineSignalApp
         //进行内存申请 和 初始化
         public void RtMemInitial()
         {
-            try
-            {
-
-            }
-            catch (InsufficientMemoryException e)
-            {
-            }
+         
         }
         //进行必要的初始化工作
         public void InitialConfig()
@@ -169,6 +163,8 @@ namespace MarineSignalApp
             Marshal.Copy(tb, 0, hglobalCorre, MarineHFrame.cbytesOfCorreCode);
             bReadDone = false;
             bQuit = false;
+
+            barStaticItem1.Enabled = false;
             this.simpleButton3.Enabled = false;
             this.simpleButton2.Enabled = true;
             this.textEdit1.Text = hframe.bytesNumOneCircle + "";
@@ -402,6 +398,8 @@ namespace MarineSignalApp
                     if (mdataqueue.IsEmpty)
                     {
                         log.Debug("数据为空，等待中...");
+                        hframe.HFrameSyncState = false;
+                        barStaticItem1.Enabled = false;
                         Thread.Sleep(1000);
                         continue;
                     }
@@ -477,6 +475,7 @@ namespace MarineSignalApp
                             }
 
                             hframe.HFrameSyncState = true;
+                            barStaticItem1.Enabled = true;
                             hframe.HFrameLocation = iCorrectIdx;
                             log.Debug("H帧同步成功，H帧位置：" + hframe.HFrameLocation);
                         }
@@ -499,9 +498,11 @@ namespace MarineSignalApp
                             {
                                 log.Debug("跟踪时，未寻找到");
                                 hframe.HFrameSyncState = false;
+                                barStaticItem1.Enabled = false;
                             }
                             else {
                                 hframe.HFrameSyncState = true;
+                                barStaticItem1.Enabled = true;
                                 hframe.HFrameLocation = hstartIndx + indxTrace;
                                 log.Debug("跟踪时，成功");
                                 log.Debug("H帧位置:" + hframe.HFrameLocation);

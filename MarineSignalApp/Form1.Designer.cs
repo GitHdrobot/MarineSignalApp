@@ -29,6 +29,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             this.groupControl1 = new DevExpress.XtraEditors.GroupControl();
             this.logContainer = new DevExpress.XtraEditors.ListBoxControl();
             this.groupControl2 = new DevExpress.XtraEditors.GroupControl();
@@ -40,6 +41,7 @@
             this.skinRibbonGalleryBarItem1 = new DevExpress.XtraBars.SkinRibbonGalleryBarItem();
             this.skinRibbonGalleryBarItem2 = new DevExpress.XtraBars.SkinRibbonGalleryBarItem();
             this.barButtonItem2 = new DevExpress.XtraBars.BarButtonItem();
+            this.barStaticItem1 = new DevExpress.XtraBars.BarStaticItem();
             this.ribbonPage1 = new DevExpress.XtraBars.Ribbon.RibbonPage();
             this.ribbonPageGroup1 = new DevExpress.XtraBars.Ribbon.RibbonPageGroup();
             this.ribbonPage2 = new DevExpress.XtraBars.Ribbon.RibbonPage();
@@ -150,11 +152,13 @@
             this.ribbonControl1.ExpandCollapseItem,
             this.skinRibbonGalleryBarItem1,
             this.skinRibbonGalleryBarItem2,
-            this.barButtonItem2});
+            this.barButtonItem2,
+            this.barStaticItem1});
             this.ribbonControl1.Location = new System.Drawing.Point(0, 0);
-            this.ribbonControl1.MaxItemId = 11;
+            this.ribbonControl1.MaxItemId = 12;
             this.ribbonControl1.Minimized = true;
             this.ribbonControl1.Name = "ribbonControl1";
+            this.ribbonControl1.PageHeaderItemLinks.Add(this.barStaticItem1);
             this.ribbonControl1.Pages.AddRange(new DevExpress.XtraBars.Ribbon.RibbonPage[] {
             this.ribbonPage1,
             this.ribbonPage2});
@@ -179,6 +183,16 @@
             this.barButtonItem2.Caption = "barButtonItem2";
             this.barButtonItem2.Id = 9;
             this.barButtonItem2.Name = "barButtonItem2";
+            // 
+            // barStaticItem1
+            // 
+            this.barStaticItem1.AllowGlyphSkinning = DevExpress.Utils.DefaultBoolean.False;
+            this.barStaticItem1.Caption = "同步状态";
+            this.barStaticItem1.Glyph = ((System.Drawing.Image)(resources.GetObject("barStaticItem1.Glyph")));
+            this.barStaticItem1.Id = 11;
+            this.barStaticItem1.LargeGlyph = ((System.Drawing.Image)(resources.GetObject("barStaticItem1.LargeGlyph")));
+            this.barStaticItem1.Name = "barStaticItem1";
+            this.barStaticItem1.TextAlignment = System.Drawing.StringAlignment.Near;
             // 
             // ribbonPage1
             // 
@@ -391,6 +405,7 @@
         private System.Windows.Forms.OpenFileDialog fileDlg;
         private System.ComponentModel.BackgroundWorker BgFetchDataWorker;
         private System.ComponentModel.BackgroundWorker bgSyncHFrameWorker;
+        private DevExpress.XtraBars.BarStaticItem barStaticItem1;
     }
 }
 
