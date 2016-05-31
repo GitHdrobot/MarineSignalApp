@@ -110,26 +110,40 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ArrayBufferFiFo.cs" />
+    <Compile Include="jmouse\ipp5.3\ippcc.cs" />
+    <Compile Include="jmouse\ipp5.3\ippch.cs" />
+    <Compile Include="jmouse\ipp5.3\ippcp.cs" />
+    <Compile Include="jmouse\ipp5.3\ippcv.cs" />
+    <Compile Include="jmouse\ipp5.3\ippdc.cs" />
+    <Compile Include="jmouse\ipp5.3\ippdi.cs" />
+    <Compile Include="jmouse\ipp5.3\ippgen.cs" />
+    <Compile Include="jmouse\ipp5.3\ippi.cs" />
+    <Compile Include="jmouse\ipp5.3\ippj.cs" />
+    <Compile Include="jmouse\ipp5.3\ippr.cs" />
+    <Compile Include="jmouse\ipp5.3\ippvc.cs" />
+    <Compile Include="jmouse\memory\ArrayBufferFiFo.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
-    <Compile Include="ippcore.cs" />
-    <Compile Include="ippdefs.cs" />
-    <Compile Include="ippm.cs" />
-    <Compile Include="ipps.cs" />
-    <Compile Include="ippsc.cs" />
-    <Compile Include="ippvm.cs" />
-    <Compile Include="LogHelper.cs" />
-    <Compile Include="RichTextBoxAppender.cs" />
-    <Compile Include="MemoryManageWrapper.cs" />
+    <Compile Include="jmouse\ipp5.3\ippcore.cs" />
+    <Compile Include="jmouse\ipp5.3\ippdefs.cs" />
+    <Compile Include="jmouse\ipp5.3\ippm.cs" />
+    <Compile Include="jmouse\ipp5.3\ipps.cs" />
+    <Compile Include="jmouse\ipp5.3\ippsc.cs" />
+    <Compile Include="jmouse\ipp5.3\ippvm.cs" />
+    <Compile Include="jmouse\log\LogHelper.cs" />
+    <Compile Include="jmouse\log\RichTextBoxAppender.cs" />
+    <Compile Include="jmouse\memory\MemoryManageWrapper.cs" />
+    <Compile Include="MarineEntity\MarineFrame.cs" />
+    <Compile Include="MarineEntity\MarineSFrame.cs" />
+    <Compile Include="MarineTool\MarineCommon.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RtDefines.cs" />
-    <Compile Include="MarineHFrame.cs" />
+    <Compile Include="jmouse\RtDefines.cs" />
+    <Compile Include="MarineEntity\MarineHFrame.cs" />
     <Compile Include="RtFilePath.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
@@ -176,6 +190,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
