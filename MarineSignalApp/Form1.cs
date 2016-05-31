@@ -1,19 +1,31 @@
 ﻿#region Using Directive
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+using System.Reflection;
+using System.Reflection.Emit;
+
+using System.Runtime.InteropServices;//DllImport
+
+using System.ServiceModel.Channels;//BufferManager
+
 using ipp;//ipp 
+using System.IO;
+
 using JerryMouse;
+using System.Collections.Concurrent;
+using System.Threading;
+using DevExpress.Xpo.Logger;
 // Import log4net classes.
 using log4net;
+using log4net.Config;
 using log4net.Core;
-using System;
-using System.Collections.Concurrent;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;//DllImport
-using System.Threading;
-using System.Windows.Forms;
-using MarineSignalApp.MarineTool;
-using MarineSignalApp.MarineEntity;
+using log4net.Appender;
 #endregion
 
 namespace MarineSignalApp
@@ -24,7 +36,7 @@ namespace MarineSignalApp
         public const int MAX_POOL_SIZE = 209715200;//200M
         public const int MAX_IND_SIZE = 2097152;//2M
         public const int MAX_NUM_BUFF = MAX_POOL_SIZE / MAX_IND_SIZE;
-        public const int NUM_OF_BUFF = 200;
+        public const int NUM_OF_BUFF = 100;
 
         public MarineHFrame hframe;
         protected FileStream sigDatafs;
@@ -32,9 +44,7 @@ namespace MarineSignalApp
 
         protected bool bReadDone, bRunning, bQuit;
 
-        public ConcurrentQueue<byte[]> mDataQueue;
-        //存放找到的H帧相位
-        public ConcurrentQueue<float> mPhaseQueue;
+        public ConcurrentQueue<byte[]> mdataqueue;
         //相干码矩阵
         //Ipp32fc[] mArrayCorrCode;
         IntPtr hglobalCorre;
@@ -123,14 +133,12 @@ namespace MarineSignalApp
             this.simpleButton3.Enabled = false;
             this.simpleButton2.Enabled = true;
             bRunning = false;
-            sigDatabr.Close();
-            sigDatafs.Close();
         }
 
         //进行内存申请 和 初始化
         public void RtMemInitial()
         {
-
+         
         }
         //进行必要的初始化工作
         public void InitialConfig()
@@ -144,10 +152,9 @@ namespace MarineSignalApp
 
             RtMemInitial();
             //创建一个HFrame实例
-            hframe = new MarineHFrame( MarineFrame.FramType.SYNCHRONOUS_FRAME);
+            hframe = new MarineHFrame();
             //buff
-            mDataQueue = new ConcurrentQueue<byte[]>();
-            mPhaseQueue = new ConcurrentQueue<float>();
+            mdataqueue = new ConcurrentQueue<byte[]>();
             //mArrayCorrCode = new Ipp32fc[MarineHFrame.ccorreCodeNum];
             hglobalCorre = Marshal.AllocHGlobal(MarineHFrame.cbytesOfCorreCode);
             byte[] tb = new byte[MarineHFrame.cbytesOfCorreCode];
@@ -194,32 +201,8 @@ namespace MarineSignalApp
             }
             else
             {
-                string _log = "";
-                //调制解调相关日志
-                if (checkEditDemod.Checked && logevent.Level.Name == rtdef.INFO)
-                {
-                    _log = "[" + logevent.Level + "]  " + logevent.TimeStamp.ToLocalTime() + ">>  " + logevent.RenderedMessage;
-                }
-                //Debug相关日志
-                if (checkEditDebug.Checked && logevent.Level.Name == rtdef.DEBUG)
-                {
-                    _log = "[" + logevent.Level + "]  " + logevent.TimeStamp.ToLocalTime() + ">>  " + logevent.RenderedMessage;
-                }
-                //Warning相关日志
-                if (checkEditDemod.Checked && logevent.Level.Name == rtdef.WARNING)
-                {
-                    _log = "[" + logevent.Level + "]  " + logevent.TimeStamp.ToLocalTime() + ">>  " + logevent.RenderedMessage;
-                }
-                //Error相关日志
-                if (checkEditDemod.Checked && logevent.Level.Name == rtdef.ERROR)
-                {
-                    _log = "[" + logevent.Level + "]  " + logevent.TimeStamp.ToLocalTime() + ">>  " + logevent.RenderedMessage;
-                }
-                if (_log != rtdef.STR_EMPTY)
-                {
-                    logContainer.Items.Add(_log);
-                }
-
+                string _log = "[" + logevent.Level + "]  " + logevent.TimeStamp.ToLocalTime() + ">>  " + logevent.RenderedMessage;
+                logContainer.Items.Add(_log);
             }
         }
 
@@ -293,7 +276,7 @@ namespace MarineSignalApp
                     {
                         return;
                     }
-                    if (mDataQueue.Count > NUM_OF_BUFF)
+                    if (mdataqueue.Count > NUM_OF_BUFF)
                     {
                         log.Warn("数据缓冲区已满，等待处理。。。");
                         System.Threading.Thread.Sleep(1500);
@@ -306,7 +289,7 @@ namespace MarineSignalApp
                         bfwbuff = sigDatabr.ReadBytes(hframe.bytesNumOneCircle);
                         if (bfwbuff != null && bfwbuff.Length == hframe.bytesNumOneCircle)
                         {
-                            mDataQueue.Enqueue(bfwbuff);
+                            mdataqueue.Enqueue(bfwbuff);
                         }
                         else {
                             continue;
@@ -372,6 +355,7 @@ namespace MarineSignalApp
             IntPtr hglobalDataSnd = (IntPtr)null;
 
             IntPtr hAbsCorSumTrace = (IntPtr)null;
+
             //GCHandle gchandlest, gchandlesnd;
 
             //定义测试时间所需变量
@@ -383,14 +367,19 @@ namespace MarineSignalApp
             try
             {
 
+                //float[] absCorSumSt = new float[hframe.sampleNumOneCircle - MarineHFrame.ccorreCodeNum];
+                //float[] absCorSumSnd = new float[hframe.sampleNumOneCircle - MarineHFrame.ccorreCodeNum];
+
+                //Ipp32fc[] IpcDataSt = new Ipp32fc[hframe.sampleNumOneCircle];
+                //Ipp32fc[] IpcDataSnd = new Ipp32fc[hframe.sampleNumOneCircle];
                 //unmanaged buffer
+
+
                 hAbsCorSumSt = Marshal.AllocHGlobal(sumsz);
                 hAbsCorSumSnd = Marshal.AllocHGlobal(sumsz);
 
                 hglobalDataSt = Marshal.AllocHGlobal(hframe.bytesNumOneCircle);
                 hglobalDataSnd = Marshal.AllocHGlobal(hframe.bytesNumOneCircle);
-
-                float pPhrase;
 
                 float fmaxst = 0.0f, fmaxsnd = 0.0f;
                 int iIndxst = -1, iIndxsnd = -1, iCorrectIdx = -1;
@@ -406,7 +395,7 @@ namespace MarineSignalApp
 
                 while (!bgSyncHFrameWorker.CancellationPending)
                 {
-                    if (mDataQueue.IsEmpty)
+                    if (mdataqueue.IsEmpty)
                     {
                         log.Debug("数据为空，等待中...");
                         hframe.HFrameSyncState = false;
@@ -414,7 +403,7 @@ namespace MarineSignalApp
                         Thread.Sleep(1000);
                         continue;
                     }
-                    while (!mDataQueue.IsEmpty)
+                    while (!mdataqueue.IsEmpty)
                     {
                         QueryPerformanceFrequency(ref freq);
                         QueryPerformanceCounter(ref count);
@@ -424,7 +413,7 @@ namespace MarineSignalApp
                             break;
                         }
 
-                        if (!hframe.HFrameSyncState && mDataQueue.Count < rtdef.TWO)
+                        if (!hframe.HFrameSyncState && mdataqueue.Count < rtdef.TWO)
                         {
                             log.Debug("数据已处理完成，等待中...");
                             System.Threading.Thread.Sleep(10);
@@ -433,27 +422,39 @@ namespace MarineSignalApp
                         byte[] st = null, snd = null;
 
                         //GCHandle pinnedObj = GCHandle.Alloc(anObj, GCHandleType.Pinned);
-                        if (!mDataQueue.TryDequeue(out st) || st == null)
+                        if (!mdataqueue.TryDequeue(out st) || st == null)
                         {
                             log.Warn("取第一个数据失败");
                             continue;
                         }
                         //gchandlest = GCHandle.Alloc(st, GCHandleType.Pinned);
+
+                        //if (st.Length != hframe.bytesNumOneCircle)
+                        //{
+                        //    log.Debug("取第一个数据失败");
+                        //    continue;
+                        //}
+                        //GCHandle.ToIntPtr(gchandlest);
                         Marshal.Copy(st, 0, hglobalDataSt, hframe.bytesNumOneCircle);
 
                         //同步操作 寻找H帧的位置
                         #region 
                         if (hframe.HFrameSyncState == false)
                         {
-                            if (!mDataQueue.TryDequeue(out snd) || snd == null)
+                            if (!mdataqueue.TryDequeue(out snd) || snd == null)
                             {
                                 log.Warn("取第二个数据失败");
                                 continue;
                             }
-
+                            //gchandlesnd = GCHandle.Alloc(snd, GCHandleType.Pinned);
+                            //if (snd.Length != hframe.bytesNumOneCircle)
+                            //{
+                            //    Console.WriteLine("Impossible!!!");
+                            //    continue;
+                            //}
                             Marshal.Copy(snd, 0, hglobalDataSnd, hframe.bytesNumOneCircle);
-                            GetHFrameLocation((Ipp32fc*)hglobalDataSt, hframe.sampleNumOneCircle, (float*)hAbsCorSumSt, hframe.slidelen, ref fmaxst, ref iIndxst, &pPhrase);
-                            GetHFrameLocation((Ipp32fc*)hglobalDataSnd, hframe.sampleNumOneCircle, (float*)hAbsCorSumSnd, hframe.slidelen, ref fmaxsnd, ref iIndxsnd, &pPhrase);
+                            GetHFrameLocation((Ipp32fc*)hglobalDataSt, hframe.sampleNumOneCircle, (float*)hAbsCorSumSt, hframe.slidelen, ref fmaxst, ref iIndxst);
+                            GetHFrameLocation((Ipp32fc*)hglobalDataSnd, hframe.sampleNumOneCircle, (float*)hAbsCorSumSnd, hframe.slidelen, ref fmaxsnd, ref iIndxsnd);
                             if (iIndxsnd < 0 || iIndxst < 0)
                             {
                                 //未找到H帧
@@ -477,7 +478,6 @@ namespace MarineSignalApp
                             barStaticItem1.Enabled = true;
                             hframe.HFrameLocation = iCorrectIdx;
                             log.Debug("H帧同步成功，H帧位置：" + hframe.HFrameLocation);
-                            mPhaseQueue.Enqueue(pPhrase / MarineHFrame.cHSpace);
                         }
                         #endregion
                         //跟踪H帧位置
@@ -491,7 +491,7 @@ namespace MarineSignalApp
                                 continue;//越界
                             }
                             Ipp32fc* hgstart = (Ipp32fc*)hglobalDataSt + hstartIndx;
-                            GetHFrameLocation((Ipp32fc*)hgstart, hlen, (float*)hAbsCorSumSnd, htraceSumLen, ref maxTrace, ref indxTrace, &pPhrase);
+                            GetHFrameLocation((Ipp32fc*)hgstart, hlen, (float*)hAbsCorSumSnd, htraceSumLen, ref maxTrace, ref indxTrace);
 
                             //跟踪失败 已失步
                             if (maxTrace < 0 || indxTrace < 0)
@@ -506,8 +506,6 @@ namespace MarineSignalApp
                                 hframe.HFrameLocation = hstartIndx + indxTrace;
                                 log.Debug("跟踪时，成功");
                                 log.Debug("H帧位置:" + hframe.HFrameLocation);
-                                mPhaseQueue.Enqueue(pPhrase / MarineHFrame.cHSpace);
-
                             }
                         }
                         #endregion
@@ -517,29 +515,12 @@ namespace MarineSignalApp
                     {
                         break;
                     }
-                    hframe.sucssFramNum = mPhaseQueue.Count;
-                    //hframe.sumPhase = mPhaseQueue.Sum();
-                    //hframe.avgPhase = mPhaseQueue.Sum() / hframe.sucssFramNum;
-                    hframe.avgPhase = mPhaseQueue.Average();
-                    float tPhase = 0.0f;
-                    float tMaxPhase = mPhaseQueue.Max();
-                    while (!mPhaseQueue.IsEmpty)
-                    {
-                        mPhaseQueue.TryDequeue(out tPhase);
-                        hframe.variancePhase += Math.Pow(tPhase - hframe.avgPhase, 2);
-                    }
-                    hframe.variancePhase = Math.Sqrt(hframe.variancePhase);
-                    hframe.variancePhase /= hframe.sucssFramNum;
+
+
                     QueryPerformanceCounter(ref count1);
                     count = count1 - count;
                     result = (double)(count) / (double)freq;
                     log.Debug("H帧寻找时间:" + result + " 秒");
-                    log.Info("H帧共:" + hframe.sucssFramNum + "个");
-                    log.Info("平均值:" + hframe.avgPhase);
-                    log.Info("最大值:" +  tMaxPhase);
-                    log.Info("最大偏差:" + (tMaxPhase - hframe.avgPhase));
-                    log.Info("方差:" + hframe.variancePhase);
-
                 }
 
             }
@@ -604,24 +585,19 @@ namespace MarineSignalApp
         //}
 
         // 查找H帧的位置 并返回
-        unsafe void GetHFrameLocation(Ipp32fc* pIpcData, int ipcDataLen, float* pAbsCorreSum, int sumLen, ref float pfmax, ref int piIndx, float* pPhrase)
+        unsafe void GetHFrameLocation(Ipp32fc* pIpcData, int ipcDataLen, float* pAbsCorreSum, int sumLen, ref float pfmax, ref int piIndx)
         {
             float fmax = -1.0f;
             int iIndx = -1;
             Ipp32fc* pnIpcData = null;
-            Ipp32fc* pCorreSum = null;
             try
             {
                 //pnIpcData 存放做完相干处理后的数据
                 pnIpcData = sp.ippsMalloc_32fc(ipcDataLen);
-                //pCorreSum 存放相干求和的数据
-                pCorreSum = sp.ippsMalloc_32fc(sumLen);
                 //相干处理
                 CorrelatorProcess(pIpcData, ipcDataLen, pnIpcData, ipcDataLen);
                 //相干码滑动 求得一个和值
-                SlideMatchHFrame(pnIpcData, ipcDataLen, (Ipp32fc*)hglobalCorre, MarineHFrame.ccorreCodeNum, pCorreSum, sumLen);
-                //求abs
-                sp.ippsMagnitude_32fc(pCorreSum, pAbsCorreSum, sumLen);
+                SlideMatchHFrame(pnIpcData, ipcDataLen, (Ipp32fc*)hglobalCorre, MarineHFrame.ccorreCodeNum, pAbsCorreSum, sumLen);
                 //在和值中 求出最大值
                 sp.ippsMaxIndx_32f(pAbsCorreSum, sumLen, &fmax, &iIndx);
                 if (iIndx + MarineHFrame.ccmpOffset > sumLen || iIndx - MarineHFrame.ccmpOffset < 0)
@@ -634,8 +610,6 @@ namespace MarineSignalApp
                     pfmax = fmax;
                     piIndx = iIndx;
                 }
-                //求H帧相位
-                sp.ippsPhase_32fc(&pCorreSum[iIndx], pPhrase, 1);
             }
 
             catch (Exception e)
@@ -647,10 +621,6 @@ namespace MarineSignalApp
                 if (null != pnIpcData)
                 {
                     sp.ippsFree(pnIpcData);
-                }
-                if (null != pCorreSum)
-                {
-                    sp.ippsFree(pCorreSum);
                 }
 
             }
@@ -669,7 +639,7 @@ namespace MarineSignalApp
                 //IppStatus ippsConj_32fc(const Ipp32fc* pSrc, Ipp32fc* pDst, int len);
                 sp.ippsConj_32fc(pSrc, pSrcConj, srclen);
                 //IppStatus ippsMul_32fc(const Ipp32fc* pSrc1, const Ipp32fc* pSrc2, Ipp32fc*pDst, int len);
-                sp.ippsMul_32fc(pSrc + MarineHFrame.cHSpace, pSrcConj, pDst, srclen - MarineHFrame.cHSpace);
+                sp.ippsMul_32fc(pSrc + 1, pSrcConj, pDst, srclen - 1);
 
             }
             catch (Exception e)
@@ -690,21 +660,21 @@ namespace MarineSignalApp
         }
 
         //滑动匹配H帧
-        unsafe int SlideMatchHFrame(Ipp32fc* pSrc, int slen, Ipp32fc* pCorrCode, int corrLen, Ipp32fc* pCorreSum, int absSumLen)
+        unsafe int SlideMatchHFrame(Ipp32fc* pSrc, int slen, Ipp32fc* pCorrCode, int corrLen, float* pAbsSum, int absSumLen)
         {
             Ipp32fc* ptmpSlide = null;
-            //Ipp32fc* pCorreSum = null;
+            Ipp32fc* pCorreSum = null;
             Ipp32fc* pDst = null;
             try
             {
                 //Ipp32fc* ippsMalloc_32fc(int len);
                 ptmpSlide = sp.ippsMalloc_32fc(corrLen);
                 //Ipp32f *pAbsCorreSum = ippsMalloc_32f(slen - corrLen);
-                //pCorreSum = sp.ippsMalloc_32fc(absSumLen);
+                pCorreSum = sp.ippsMalloc_32fc(absSumLen);
                 pDst = sp.ippsMalloc_32fc(corrLen);
                 //IppStatus ippsZero_32fc(Ipp32fc* pDst, int len);
                 sp.ippsZero_32fc(ptmpSlide, corrLen);
-                //sp.ippsZero_32fc(pCorreSum, absSumLen);
+                sp.ippsZero_32fc(pCorreSum, absSumLen);
                 //sp.ippsZero_32f(pAbsSum, absSumLen);
                 sp.ippsZero_32fc(pDst, corrLen);
                 for (int i = 0; i < slen - corrLen; i++)
@@ -716,7 +686,7 @@ namespace MarineSignalApp
                     sp.ippsSum_32fc(pDst, corrLen, pCorreSum + i, IppHintAlgorithm.ippAlgHintNone);
                 }
                 //IppStatus ippsMagnitude_32fc(const Ipp32fc* pSrc, Ipp32f* pDst, int len);
-                //sp.ippsMagnitude_32fc(pCorreSum, pAbsSum, absSumLen);
+                sp.ippsMagnitude_32fc(pCorreSum, pAbsSum, absSumLen);
 
 
             }
@@ -731,7 +701,10 @@ namespace MarineSignalApp
                 {
                     sp.ippsFree(ptmpSlide);
                 }
-
+                if (null != pCorreSum)
+                {
+                    sp.ippsFree(pCorreSum);
+                }
                 if (null != pDst)
                 {
                     sp.ippsFree(pDst);
