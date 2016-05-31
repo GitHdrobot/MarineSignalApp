@@ -25,7 +25,7 @@ namespace MarineSignalApp.MarineTool
         #endregion
         #region method
         #endregion
-
+         
         #region properity
         public long MSampleRate
         {
